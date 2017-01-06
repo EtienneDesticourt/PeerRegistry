@@ -2,7 +2,7 @@ from flask import Flask
 from flask import request
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import inspect
-import config.test as config
+import config.dev as config
 import user
 import user_manager
 import json
@@ -79,4 +79,4 @@ def challenge(username):
         return NO_USER_ERROR
     challenge = ip_manager.create_challenge(username, user.public_key)
     print(request.remote_addr)
-    return json.dumps({'challenge': challenge.encrypted, "ip": request.environ['REMOTE_ADDR']})
+    return json.dumps({'challenge': challenge.encrypted, "ip": request.headers['X-Real-IP']})
