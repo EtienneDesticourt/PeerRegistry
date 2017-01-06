@@ -9,8 +9,8 @@ import base64
 
 
 def DEFAULT_PADDING():
-    return padding.OAEP(mgf=padding.MGF1(algorithm=hashes.SHA256()),
-                        algorithm=hashes.SHA256(),
+    return padding.OAEP(mgf=padding.MGF1(algorithm=hashes.SHA1()),
+                        algorithm=hashes.SHA1(),
                         label=None)
 
 MAX_CHALLENGE_DELAY = 120
