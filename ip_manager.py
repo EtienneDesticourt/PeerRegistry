@@ -1,11 +1,21 @@
 import time
 import uuid
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.serialization import load_pem_public_key
+from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives import hashes
 from collections import namedtuple
+import base64
 
+
+def DEFAULT_PADDING():
+    return padding.OAEP(mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                        algorithm=hashes.SHA256(),
+                        label=None)
 
 MAX_CHALLENGE_DELAY = 120
 
-Challenge = namedtuple('Challenge', ['secret', 'issued'])
+Challenge = namedtuple('Challenge', ['secret', 'encrypted', 'issued'])
 
 
 class IpManagerException(Exception):
@@ -27,10 +37,14 @@ class IpManager(object):
             return self.ips[username]
         return None
 
-    def create_challenge(self, username):
+    def create_challenge(self, username, public_key_data):
+        key = load_pem_public_key(public_key_data.encode('utf8'), backend=default_backend())
+
         secret = str(uuid.uuid4())
-        secret = str(0)
-        challenge = Challenge(secret, issued=time.time())
+        encrypted_secret = key.encrypt(secret.encode('utf8'), DEFAULT_PADDING())
+        encrypted_secret_b64 = base64.b64encode(encrypted_secret).decode('utf8')
+
+        challenge = Challenge(secret, encrypted_secret_b64, issued=time.time())
         self.challenges[username] = challenge
         return challenge
 

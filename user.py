@@ -9,16 +9,10 @@ def create_user_class(db):
         username = db.Column(db.String(32), unique=True)
         public_key = db.Column(db.String(1024))
 
-        @orm.reconstructor
-        def init_on_load(self):
-            self.ip = None
-            self.challenge = None
-            self.challenge_time = None
 
         def to_dict(self):
             return {"username": self.username,
-                    "public_key": self.public_key,
-                    "ip": self.ip}
+                    "public_key": self.public_key}
 
 
 

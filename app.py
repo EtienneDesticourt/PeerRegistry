@@ -12,6 +12,7 @@ NO_USER_ERROR = json.dumps({'error': 'No such user.'})
 EXISTING_USER_ERROR = json.dumps({'error': 'User already exists.'})
 FAILED_CHALLENGE_ERROR = json.dumps({'error': 'Challenge failed.'})
 NO_CHALLENGE_ERROR = json.dumps({'error': 'No existing challenge for user.'})
+OK_RESPONSE = json.dumps({'status': 'OK'})
 
 app = Flask(__name__)
 
@@ -29,6 +30,7 @@ User = user.create_user_class(db)
 users = user_manager.UserManager(db, User)
 ip_manager = IpManager()
 
+
 @app.route('/user', methods=['POST'])
 @app.route('/user/<username>', methods=['GET'])
 def user(username=None):
@@ -43,14 +45,14 @@ def user(username=None):
         if user:
             return EXISTING_USER_ERROR
         users.add(**request.form)
-        return "OK"
-
+        return OK_RESPONSE
 
 @app.route('/ip', methods=['POST'])
 @app.route('/ip/<username>', methods=['GET'])
 def ip(username=None):
     if request.method == 'GET':
         ip = ip_manager.get_ip(username)
+        print(ip)
         return json.dumps({"ip": ip})
 
     elif request.method == 'POST':
@@ -64,7 +66,7 @@ def ip(username=None):
         try:
             if ip_manager.challenge_is_correct(username, challenge_answer):
                 ip_manager.update_ip(username, ip)
-                return "OK"
+                return OK_RESPONSE
             return FAILED_CHALLENGE_ERROR
         except NoChallengeError:
             return NO_CHALLENGE_ERROR
@@ -75,5 +77,6 @@ def challenge(username):
     user = users.get(username=username)
     if not user:
         return NO_USER_ERROR
-    challenge = ip_manager.create_challenge(username)
-    return json.dumps({'challenge': challenge.secret})
+    challenge = ip_manager.create_challenge(username, user.public_key)
+    print(request.remote_addr)
+    return json.dumps({'challenge': challenge.encrypted, "ip": request.remote_addr})
